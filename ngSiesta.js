@@ -4,33 +4,25 @@ angular.module('ngSiesta', [])
     .run(function ($window, $q, $rootScope, $exceptionHandler) {
         $window.q = $q;
 
-        $window.siesta._internal.events.on('siesta', function (e) {
-            console.log(e);
-        });
-
-        $window.siesta.on('siesta', function (e) {
-            console.log(e);
-        });
-
-        var oldOn = $window.siesta._internal.events.on;
-        $window.siesta._internal.events.on = function (event, fn) {
-            oldOn.call($window.siesta._internal.events, event, function (e) {
-                // http://stackoverflow.com/questions/12729122/prevent-error-digest-already-in-progress-when-calling-scope-apply
-                if (!$rootScope.$$phase) {
-                    $rootScope.$apply(function () {
-                        fn(e);
-                    });
+        var oldEmit = $window.siesta._internal.events.emit;
+        $window.siesta._internal.events.emit = function () {
+            var args = arguments;
+            // http://stackoverflow.com/questions/12729122/prevent-error-digest-already-in-progress-when-calling-scope-apply
+            if (!$rootScope.$$phase) {
+                $rootScope.$apply(function () {
+                    oldEmit.apply($window.siesta._internal.events, args);
+                });
+            }
+            else {
+                try {
+                    oldEmit.apply($window.siesta._internal.events, args);
                 }
-                else {
-                    try {
-                        fn(e);
-                    }
-                    catch (error) {
-                        $exceptionHandler(error);
-                    }
+                catch (error) {
+                    $exceptionHandler(error);
                 }
-            });
+            }
         };
+
     })
     .service('Siesta', function ($window) {
         return $window.siesta;
@@ -44,7 +36,11 @@ angular.module('siestaApp', ['ngSiesta'])
             });
 
         M.listen(function (e) {
-            console.log(e);
+            // Test that we're in the $digest cycle.
+            if (!$rootScope.$$phase) {
+                console.error('Should be in $digest')
+            }
+            console.log('Event', e);
         });
 
         M.map({
