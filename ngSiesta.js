@@ -2,7 +2,7 @@
 
 angular.module('ngSiesta', [])
     .run(function ($window, $q, $rootScope, $exceptionHandler) {
-        $window.q = $q;
+        siesta.q = $q;
 
         var oldEmit = $window.siesta._internal.events.emit;
         $window.siesta._internal.events.emit = function () {
