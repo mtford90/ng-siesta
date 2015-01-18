@@ -29,13 +29,19 @@ angular.module('ngSiesta', [])
     });
 
 angular.module('siestaApp', ['ngSiesta'])
-    .controller('ctrl', function (Siesta, $rootScope) {
-        var C = Siesta.collection('foo'),
-            M = C.model('m', {
-                attributes: ['bar']
-            });
 
-        M.listen(function (e) {
+    .factory('MyCollection', function (Siesta) {
+        return Siesta.collection('MyCollection');
+    })
+
+    .factory('MyModel', function (MyCollection) {
+        return MyCollection.model('MyModel', {
+            attributes: ['bar']
+        });
+    })
+
+    .controller('ctrl', function (Siesta, $rootScope, MyModel) {
+        MyModel.listen(function (e) {
             // Test that we're in the $digest cycle.
             if (!$rootScope.$$phase) {
                 console.error('Should be in $digest')
@@ -43,9 +49,9 @@ angular.module('siestaApp', ['ngSiesta'])
             console.log('Event', e);
         });
 
-        M.map({
+        MyModel.map({
             bar: 'foo'
-        }).then(function (model) {
-            model.bar = 'baz';
+        }).then(function (instance) {
+            instance.bar = 'baz';
         });
     });
